@@ -44,6 +44,10 @@ def get_missing_env_vars(environ):
     return missing_env_vars
 
 
+def is_jenkins_resource(resource):
+    return resource.name.startswith('J')
+
+
 def cleanup():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__ + '.cleanup')
@@ -58,14 +62,20 @@ def cleanup():
     leftover_resources = []
 
     for keypair in client.keypairs.list():
-        if keypair.name.startswith('tempkey-J'):
+        if is_jenkins_resource(keypair):
             logger.info('found keypair: %s', keypair.name)
             leftover_resources.append(keypair)
 
     for server in client.servers.list():
-        if server.name.startswith('J'):
+        if is_jenkins_resource(server):
             logger.info('found server: %s', server.name)
             leftover_resources.append(server)
+
+    for image in client.images.list():
+        if is_jenkins_resource(image):
+            logger.info('found image: %s', image.name)
+            leftover_resources.append(image)
+
 
     if args.remove:
         for resource in leftover_resources:
