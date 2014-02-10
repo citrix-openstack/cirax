@@ -10,6 +10,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'cirax-cleanup = cirax.scripts:jenkins_cleanup',
+            'cirax-nodepool-cleanup = cirax.scripts:nodepool_cleanup',
         ]
     }
 )

@@ -48,8 +48,16 @@ def is_jenkins_resource(resource):
     return resource.name.startswith('J')
 
 
+def is_nodepool_resource(resource):
+    return resource.name.startswith('devstack-xenserver')
+
+
 def jenkins_cleanup():
     cleanup(is_jenkins_resource)
+
+
+def nodepool_cleanup():
+    cleanup(is_nodepool_resource)
 
 
 def cleanup(resource_selector):
