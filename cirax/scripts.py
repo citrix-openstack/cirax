@@ -48,6 +48,10 @@ def is_jenkins_resource(resource):
     return resource.name.startswith('J')
 
 
+def jenkins_cleanup():
+    cleanup()
+
+
 def cleanup():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__ + '.cleanup')
