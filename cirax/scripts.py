@@ -56,12 +56,18 @@ def is_nodepool_resource(resource):
 
 def jenkins_cleanup():
     configure_logging()
-    cleanup(is_jenkins_resource)
+    args = args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(is_jenkins_resource, args, client)
 
 
 def nodepool_cleanup():
     configure_logging()
-    cleanup(is_nodepool_resource)
+    args = args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(is_nodepool_resource, args, client)
 
 
 def configure_logging():
@@ -85,11 +91,8 @@ def args_or_die():
     return parser.parse_args()
 
 
-def cleanup(resource_selector):
+def cleanup(resource_selector, args, client):
     logger = logging.getLogger(__name__ + '.cleanup')
-    args = args_or_die()
-    environ = env_vars_or_die()
-    client = get_client(environ)
     leftover_resources = []
 
     for keypair in client.keypairs.list():
