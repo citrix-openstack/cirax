@@ -55,15 +55,20 @@ def is_nodepool_resource(resource):
 
 
 def jenkins_cleanup():
+    configure_logging()
     cleanup(is_jenkins_resource)
 
 
 def nodepool_cleanup():
+    configure_logging()
     cleanup(is_nodepool_resource)
 
 
-def cleanup(resource_selector):
+def configure_logging():
     logging.basicConfig(level=logging.INFO)
+
+
+def cleanup(resource_selector):
     logger = logging.getLogger(__name__ + '.cleanup')
     parser = argparse.ArgumentParser(description='List, and optionally '
         'Cleanup cloud resources')
