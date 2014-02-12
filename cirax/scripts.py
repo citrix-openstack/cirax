@@ -1,9 +1,11 @@
 import logging
 import argparse
+import os
+import sys
+from collections import namedtuple
+
 from novaclient import auth_plugin
 from novaclient.v1_1 import client
-from collections import namedtuple
-import os
 
 
 ENV_MAPPING = {
@@ -25,7 +27,7 @@ def parse_env(environ):
 
 
 def get_client(environ):
-    rax_env = RaxEnv(**parse_env(os.environ))
+    rax_env = RaxEnv(**parse_env(environ))
 
     return client.Client(
         rax_env.username,
@@ -44,49 +46,103 @@ def get_missing_env_vars(environ):
     return missing_env_vars
 
 
-def is_jenkins_resource(resource):
-    return resource.name.startswith('J')
+def is_jenkins_resource():
+    return create_resource_selector('J')
 
 
-def is_nodepool_resource(resource):
-    return resource.name.startswith('devstack-xenserver')
+def is_nodepool_resource():
+    return create_resource_selector('devstack-xenserver')
 
 
 def jenkins_cleanup():
-    cleanup(is_jenkins_resource)
+    configure_logging()
+    args = args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(is_jenkins_resource(), args, client)
 
 
 def nodepool_cleanup():
-    cleanup(is_nodepool_resource)
+    configure_logging()
+    args = args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(is_nodepool_resource(), args, client)
 
 
-def cleanup(resource_selector):
+def configure_logging():
     logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__ + '.cleanup')
+
+
+def env_vars_or_die():
+    missing_env_vars = get_missing_env_vars(os.environ)
+    if missing_env_vars:
+        for varname in missing_env_vars:
+            sys.stdout.write('environment variable %s is not set\n' % varname)
+        sys.exit(1)
+    return os.environ
+
+
+def args_or_die():
     parser = argparse.ArgumentParser(description='List, and optionally '
-        'Cleanup cloud resources')
+                                                 'Cleanup cloud resources')
     parser.add_argument('--remove', help='Delete resources',
                         action='store_true')
     args = parser.parse_args()
+    args.images = True
+    args.servers = True
+    args.keypairs = True
+    return args
 
-    missing_env_vars = get_missing_env_vars(os.environ)
-    client = get_client(os.environ)
+
+def generic_args_or_die():
+    parser = argparse.ArgumentParser(description='List, and optionally '
+                                                 'Cleanup cloud resources')
+    parser.add_argument('startswith', help='A prefix to select resources')
+    parser.add_argument('--remove', help='Delete resources',
+                        action='store_true')
+    parser.add_argument('--images', help='Deal with images', action='store_true')
+    parser.add_argument('--servers', help='Deal with servers', action='store_true')
+    parser.add_argument('--keypairs', help='Deal with keypairs', action='store_true')
+    return parser.parse_args()
+
+
+def create_resource_selector(startpattern):
+    def resource_selector(resource):
+        return resource.name.startswith(startpattern)
+
+    return resource_selector
+
+
+def generic_cleanup():
+    configure_logging()
+    args = generic_args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(create_resource_selector(args.startswith), args, client)
+
+
+def cleanup(resource_selector, args, client):
+    logger = logging.getLogger(__name__ + '.cleanup')
     leftover_resources = []
 
-    for keypair in client.keypairs.list():
-        if resource_selector(keypair):
-            logger.info('found keypair: %s', keypair.name)
-            leftover_resources.append(keypair)
+    if args.keypairs:
+        for keypair in client.keypairs.list():
+            if resource_selector(keypair):
+                logger.info('found keypair: %s', keypair.name)
+                leftover_resources.append(keypair)
 
-    for server in client.servers.list():
-        if resource_selector(server):
-            logger.info('found server: %s', server.name)
-            leftover_resources.append(server)
+    if args.servers:
+        for server in client.servers.list():
+            if resource_selector(server):
+                logger.info('found server: %s', server.name)
+                leftover_resources.append(server)
 
-    for image in client.images.list():
-        if resource_selector(image):
-            logger.info('found image: %s', image.name)
-            leftover_resources.append(image)
+    if args.images:
+        for image in client.images.list():
+            if resource_selector(image):
+                logger.info('found image: %s', image.name)
+                leftover_resources.append(image)
 
 
     if args.remove:
