@@ -46,30 +46,6 @@ def get_missing_env_vars(environ):
     return missing_env_vars
 
 
-def is_jenkins_resource():
-    return create_resource_selector('J')
-
-
-def is_nodepool_resource():
-    return create_resource_selector('devstack-xenserver')
-
-
-def jenkins_cleanup():
-    configure_logging()
-    args = args_or_die()
-    environ = env_vars_or_die()
-    client = get_client(environ)
-    cleanup(is_jenkins_resource(), args, client)
-
-
-def nodepool_cleanup():
-    configure_logging()
-    args = args_or_die()
-    environ = env_vars_or_die()
-    client = get_client(environ)
-    cleanup(is_nodepool_resource(), args, client)
-
-
 def configure_logging():
     logging.basicConfig(level=logging.INFO)
 
