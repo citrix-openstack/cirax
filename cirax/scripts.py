@@ -46,12 +46,12 @@ def get_missing_env_vars(environ):
     return missing_env_vars
 
 
-def is_jenkins_resource(resource):
-    return resource.name.startswith('J')
+def is_jenkins_resource():
+    return create_resource_selector('J')
 
 
-def is_nodepool_resource(resource):
-    return resource.name.startswith('devstack-xenserver')
+def is_nodepool_resource():
+    return create_resource_selector('devstack-xenserver')
 
 
 def jenkins_cleanup():
@@ -59,7 +59,7 @@ def jenkins_cleanup():
     args = args_or_die()
     environ = env_vars_or_die()
     client = get_client(environ)
-    cleanup(is_jenkins_resource, args, client)
+    cleanup(is_jenkins_resource(), args, client)
 
 
 def nodepool_cleanup():
@@ -67,7 +67,7 @@ def nodepool_cleanup():
     args = args_or_die()
     environ = env_vars_or_die()
     client = get_client(environ)
-    cleanup(is_nodepool_resource, args, client)
+    cleanup(is_nodepool_resource(), args, client)
 
 
 def configure_logging():
@@ -89,6 +89,13 @@ def args_or_die():
     parser.add_argument('--remove', help='Delete resources',
                         action='store_true')
     return parser.parse_args()
+
+
+def create_resource_selector(startpattern):
+    def resource_selector(resource):
+        return resource.name.startswith(startpattern)
+
+    return resource_selector()
 
 
 def cleanup(resource_selector, args, client):
