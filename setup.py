@@ -9,8 +9,6 @@ setup(
     install_requires=['rackspace-novaclient'],
     entry_points = {
         'console_scripts': [
-            'cirax-jenkins-cleanup = cirax.scripts:jenkins_cleanup',
-            'cirax-nodepool-cleanup = cirax.scripts:nodepool_cleanup',
             'cirax-cleanup = cirax.scripts:generic_cleanup',
         ]
     }
