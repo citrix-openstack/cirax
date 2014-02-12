@@ -88,6 +88,22 @@ def args_or_die():
                                                  'Cleanup cloud resources')
     parser.add_argument('--remove', help='Delete resources',
                         action='store_true')
+    args = parser.parse_args()
+    args.images = True
+    args.servers = True
+    args.keypairs = True
+    return args
+
+
+def generic_args_or_die():
+    parser = argparse.ArgumentParser(description='List, and optionally '
+                                                 'Cleanup cloud resources')
+    parser.add_argument('startswith', help='A prefix to select resources')
+    parser.add_argument('--remove', help='Delete resources',
+                        action='store_true')
+    parser.add_argument('--images', help='Deal with images', action='store_true')
+    parser.add_argument('--servers', help='Deal with servers', action='store_true')
+    parser.add_argument('--keypairs', help='Deal with keypairs', action='store_true')
     return parser.parse_args()
 
 
@@ -95,27 +111,38 @@ def create_resource_selector(startpattern):
     def resource_selector(resource):
         return resource.name.startswith(startpattern)
 
-    return resource_selector()
+    return resource_selector
+
+
+def generic_cleanup():
+    configure_logging()
+    args = generic_args_or_die()
+    environ = env_vars_or_die()
+    client = get_client(environ)
+    cleanup(create_resource_selector(args.startswith), args, client)
 
 
 def cleanup(resource_selector, args, client):
     logger = logging.getLogger(__name__ + '.cleanup')
     leftover_resources = []
 
-    for keypair in client.keypairs.list():
-        if resource_selector(keypair):
-            logger.info('found keypair: %s', keypair.name)
-            leftover_resources.append(keypair)
+    if args.keypairs:
+        for keypair in client.keypairs.list():
+            if resource_selector(keypair):
+                logger.info('found keypair: %s', keypair.name)
+                leftover_resources.append(keypair)
 
-    for server in client.servers.list():
-        if resource_selector(server):
-            logger.info('found server: %s', server.name)
-            leftover_resources.append(server)
+    if args.servers:
+        for server in client.servers.list():
+            if resource_selector(server):
+                logger.info('found server: %s', server.name)
+                leftover_resources.append(server)
 
-    for image in client.images.list():
-        if resource_selector(image):
-            logger.info('found image: %s', image.name)
-            leftover_resources.append(image)
+    if args.images:
+        for image in client.images.list():
+            if resource_selector(image):
+                logger.info('found image: %s', image.name)
+                leftover_resources.append(image)
 
 
     if args.remove:

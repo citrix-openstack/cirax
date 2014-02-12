@@ -11,6 +11,7 @@ setup(
         'console_scripts': [
             'cirax-cleanup = cirax.scripts:jenkins_cleanup',
             'cirax-nodepool-cleanup = cirax.scripts:nodepool_cleanup',
+            'cirax-generic-cleanup = cirax.scripts:generic_cleanup',
         ]
     }
 )
