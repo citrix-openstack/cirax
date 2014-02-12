@@ -68,6 +68,14 @@ def configure_logging():
     logging.basicConfig(level=logging.INFO)
 
 
+def die_if_env_var_is_missing():
+    missing_env_vars = get_missing_env_vars(os.environ)
+    if missing_env_vars:
+        for varname in missing_env_vars:
+            sys.stdout.write('environment variable %s is not set\n' % varname)
+        sys.exit(1)
+
+
 def cleanup(resource_selector):
     logger = logging.getLogger(__name__ + '.cleanup')
     parser = argparse.ArgumentParser(description='List, and optionally '
@@ -76,12 +84,7 @@ def cleanup(resource_selector):
                         action='store_true')
     args = parser.parse_args()
 
-    missing_env_vars = get_missing_env_vars(os.environ)
-    if missing_env_vars:
-        for varname in missing_env_vars:
-            sys.stdout.write('environment variable %s is not set\n' % varname)
-        sys.exit(1)
-
+    die_if_env_var_is_missing()
     client = get_client(os.environ)
     leftover_resources = []
 
