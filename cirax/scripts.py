@@ -1,10 +1,11 @@
 import logging
 import argparse
-from novaclient import auth_plugin
-from novaclient.v1_1 import client
-from collections import namedtuple
 import os
 import sys
+from collections import namedtuple
+
+from novaclient import auth_plugin
+from novaclient.v1_1 import client
 
 
 ENV_MAPPING = {
