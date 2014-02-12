@@ -4,6 +4,7 @@ from novaclient import auth_plugin
 from novaclient.v1_1 import client
 from collections import namedtuple
 import os
+import sys
 
 
 ENV_MAPPING = {
@@ -70,6 +71,11 @@ def cleanup(resource_selector):
     args = parser.parse_args()
 
     missing_env_vars = get_missing_env_vars(os.environ)
+    if missing_env_vars:
+        for varname in missing_env_vars:
+            sys.stdout.write('environment variable %s is not set\n' % varname)
+        sys.exit(1)
+
     client = get_client(os.environ)
     leftover_resources = []
 
