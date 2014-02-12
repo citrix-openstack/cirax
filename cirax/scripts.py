@@ -27,7 +27,7 @@ def parse_env(environ):
 
 
 def get_client(environ):
-    rax_env = RaxEnv(**parse_env(os.environ))
+    rax_env = RaxEnv(**parse_env(environ))
 
     return client.Client(
         rax_env.username,
@@ -74,6 +74,7 @@ def env_vars_or_die():
         for varname in missing_env_vars:
             sys.stdout.write('environment variable %s is not set\n' % varname)
         sys.exit(1)
+    return os.environ
 
 
 def cleanup(resource_selector):
@@ -84,8 +85,8 @@ def cleanup(resource_selector):
                         action='store_true')
     args = parser.parse_args()
 
-    env_vars_or_die()
-    client = get_client(os.environ)
+    environ = env_vars_or_die()
+    client = get_client(environ)
     leftover_resources = []
 
     for keypair in client.keypairs.list():
