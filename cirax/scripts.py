@@ -77,14 +77,17 @@ def env_vars_or_die():
     return os.environ
 
 
-def cleanup(resource_selector):
-    logger = logging.getLogger(__name__ + '.cleanup')
+def args_or_die():
     parser = argparse.ArgumentParser(description='List, and optionally '
-        'Cleanup cloud resources')
+                                                 'Cleanup cloud resources')
     parser.add_argument('--remove', help='Delete resources',
                         action='store_true')
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def cleanup(resource_selector):
+    logger = logging.getLogger(__name__ + '.cleanup')
+    args = args_or_die()
     environ = env_vars_or_die()
     client = get_client(environ)
     leftover_resources = []
