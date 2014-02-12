@@ -68,7 +68,7 @@ def configure_logging():
     logging.basicConfig(level=logging.INFO)
 
 
-def die_if_env_var_is_missing():
+def env_vars_or_die():
     missing_env_vars = get_missing_env_vars(os.environ)
     if missing_env_vars:
         for varname in missing_env_vars:
@@ -84,7 +84,7 @@ def cleanup(resource_selector):
                         action='store_true')
     args = parser.parse_args()
 
-    die_if_env_var_is_missing()
+    env_vars_or_die()
     client = get_client(os.environ)
     leftover_resources = []
 
